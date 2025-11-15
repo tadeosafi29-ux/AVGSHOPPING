@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply font-rajdhani bg-blackbrand text-white;
+}
+
+.btn-pink {
+  @apply bg-pinkbrand text-white px-8 py-4 rounded-xl font-semibold shadow-2xl hover:bg-pink-600 transition;
+}
+
+.section-padding {
+  @apply py-32 px-4 md:px-0;
+}
