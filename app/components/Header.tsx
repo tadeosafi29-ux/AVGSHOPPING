@@ -2,166 +2,223 @@
 
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
+import { ShoppingCart, Search, Menu, X, User, ChevronDown } from 'lucide-react';
 
-interface MenuItem {
+// HeaderEcommerce.tsx
+// Single-file React component (Next.js App Router compatible)
+// Tailwind-first, accessible, responsive, megamenu, search, cart badge, user menu.
+
+type MenuItem = {
   title: string;
-  href: string;
-  subItems?: { title: string; href: string }[];
-}
+  href?: string;
+  sub?: { title: string; href: string }[];
+};
 
-const menuItems: MenuItem[] = [
+const MENU: MenuItem[] = [
   { title: 'Inicio', href: '/' },
-  { 
-    title: 'Servicios', 
-    href: '#',
-    subItems: [
-      { title: 'Publicidad en redes', href: '/servicios/publicidad' },
-      { title: 'Contenido para Instagram', href: '/servicios/contenido' },
-      { title: 'Consultoría personalizada', href: '/servicios/consultoria' },
+  {
+    title: 'Colecciones',
+    sub: [
+      { title: 'Nuevos lanzamientos', href: '/colecciones/nuevos' },
+      { title: 'Lo más vendido', href: '/colecciones/top' },
+      { title: 'Ofertas', href: '/colecciones/ofertas' },
     ],
   },
-  { title: 'Portfolio', href: '/portfolio' },
+  { title: 'Productos', href: '/productos' },
+  { title: 'Servicios', href: '/servicios' },
   { title: 'Contacto', href: '/contacto' },
 ];
 
-export default function Header() {
-  const [megaOpen, setMegaOpen] = useState(false);
+export default function HeaderEcommerce() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileMegaOpen, setMobileMegaOpen] = useState(false);
+  const [megaOpenIndex, setMegaOpenIndex] = useState<number | null>(null);
+  const [query, setQuery] = useState('');
+  const [cartCount, setCartCount] = useState(0); // integrate with your cart logic
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Close mega menu on outside click
+  // Close on outside click
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMegaOpen(false);
+        setMegaOpenIndex(null);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Close on Escape
+  // keyboard escape
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setMegaOpen(false);
         setMobileOpen(false);
+        setMegaOpenIndex(null);
       }
     };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // Debounced search (simple)
+  useEffect(() => {
+    if (!query) return;
+    const t = setTimeout(() => {
+      // TODO: call your search API or router push
+      // router.push(`/search?q=${encodeURIComponent(query)}`)
+      console.log('search for', query);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query]);
 
   return (
-    <header className="bg-blackbrand sticky top-0 z-50 shadow-md">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pinkbrand to-[#ff66b2] flex items-center justify-center shadow-lg">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M4 12h16" stroke="#000" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M12 4v16" stroke="#000" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+    <header className="sticky top-0 z-50 bg-black text-white shadow">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Left: logo + desktop nav */}
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-pink-500 rounded">
+              <div className="w-10 h-10 rounded-md bg-gradient-to-br from-red-600 to-pink-500 flex items-center justify-center shadow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M4 12h16" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M12 4v16" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div className="hidden sm:block">
+                <span className="font-bold text-lg tracking-tight text-white">AVG CONNECTS</span>
+                <div className="text-xs text-gray-300">Análisis · Trading · Contenido</div>
+              </div>
+            </Link>
+
+            {/* Desktop menu */}
+            <nav className="hidden lg:flex items-center gap-6" aria-label="Main navigation" ref={menuRef}>
+              {MENU.map((m, idx) => (
+                <div key={m.title} className="relative">
+                  {m.sub ? (
+                    <>
+                      <button
+                        onMouseEnter={() => setMegaOpenIndex(idx)}
+                        onMouseLeave={() => setMegaOpenIndex(null)}
+                        onClick={() => setMegaOpenIndex((p) => (p === idx ? null : idx))}
+                        aria-expanded={megaOpenIndex === idx}
+                        className="flex items-center gap-1 text-sm font-medium hover:text-red-400 transition"
+                      >
+                        {m.title}
+                        <ChevronDown className={`w-4 h-4 transition-transform ${megaOpenIndex === idx ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Mega panel */}
+                      <div
+                        onMouseEnter={() => setMegaOpenIndex(idx)}
+                        onMouseLeave={() => setMegaOpenIndex(null)}
+                        className={`absolute left-0 top-full mt-3 w-80 bg-[#0b0b0b] rounded-lg shadow-lg p-4 ring-1 ring-black/60 transition-all ${
+                          megaOpenIndex === idx ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-3 pointer-events-none'
+                        }`}
+                        role="menu"
+                        aria-hidden={megaOpenIndex !== idx}
+                      >
+                        <div className="grid grid-cols-1 gap-2">
+                          {m.sub.map((s) => (
+                            <Link key={s.title} href={s.href} className="block px-3 py-2 rounded hover:bg-[#111] transition">
+                              {s.title}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <Link href={m.href || '#'} className="text-sm font-medium hover:text-red-400 transition">
+                      {m.title}
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </nav>
           </div>
-          <span className="text-pinkbrand font-extrabold text-2xl tracking-wider">AVG CONNECTS</span>
-        </Link>
 
-        {/* Desktop Menu */}
-        <nav className="hidden md:flex gap-8 items-center text-gray-100">
-          {menuItems.map((item, idx) => (
-            <div key={idx} className="relative" ref={menuRef}>
-              {item.subItems ? (
-                <>
-                  <button
-                    onMouseEnter={() => setMegaOpen(true)}
-                    onMouseLeave={() => setMegaOpen(false)}
-                    onClick={() => setMegaOpen((prev) => !prev)}
-                    className="flex items-center gap-1 font-medium hover:text-pinkbrand transition"
-                  >
-                    {item.title}
-                    <svg className={`w-4 h-4 transform transition-transform ${megaOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
-                    </svg>
-                  </button>
-
-                  {/* Mega Menu */}
-                  <div
-                    onMouseEnter={() => setMegaOpen(true)}
-                    onMouseLeave={() => setMegaOpen(false)}
-                    className={`absolute left-0 top-full mt-3 w-64 bg-[#111] rounded-xl shadow-xl p-4 transition-all ${
-                      megaOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-3 pointer-events-none'
-                    }`}
-                  >
-                    {item.subItems.map((sub, i) => (
-                      <Link key={i} href={sub.href} className="block py-2 px-3 rounded hover:bg-[#222] transition">{sub.title}</Link>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <Link href={item.href} className="hover:text-pinkbrand transition">{item.title}</Link>
-              )}
+          {/* Center: Search (desktop) */}
+          <div className="flex-1 hidden md:flex justify-center px-4">
+            <div className="w-full max-w-lg">
+              <label htmlFor="search" className="sr-only">Buscar productos</label>
+              <div className="relative">
+                <input
+                  id="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar productos, marcas o contenido..."
+                  className="w-full bg-[#111] placeholder-gray-400 text-sm py-2 pl-10 pr-4 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
             </div>
-          ))}
+          </div>
 
-          <Link href="/suscribete" className="ml-4 btn-pink hidden md:inline-block">¡Comenzar!</Link>
-        </nav>
+          {/* Right: actions */}
+          <div className="flex items-center gap-3">
+            {/* CTA */}
+            <Link href="/suscribete" className="hidden md:inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-md font-semibold transition">
+              Suscribite
+            </Link>
 
-        {/* Mobile Hamburger */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 rounded-lg bg-[#ffffff05] hover:bg-[#ffffff08] transition"
-        >
-          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
-            {mobileOpen ? (
-              <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            ) : (
-              <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            )}
-          </svg>
-        </button>
+            {/* Cart */}
+            <Link href="/carrito" className="relative p-2 rounded hover:bg-white/5 transition">
+              <ShoppingCart className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5">{cartCount}</span>
+              )}
+            </Link>
+
+            {/* User */}
+            <Link href="/mi-cuenta" className="p-2 rounded hover:bg-white/5 transition hidden md:inline-flex items-center gap-2">
+              <User className="w-5 h-5" />
+              <span className="text-sm hidden lg:inline">Mi cuenta</span>
+            </Link>
+
+            {/* Mobile menu button */}
+            <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 rounded hover:bg-white/5">
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Mobile Menu */}
-      <div className={`md:hidden fixed inset-0 z-50 transform transition-transform ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      {/* Mobile drawer */}
+      <div className={`fixed inset-0 z-50 ${mobileOpen ? 'block' : 'hidden'}`} aria-hidden={!mobileOpen}>
         <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-        <div className="absolute right-0 top-0 bottom-0 w-4/5 max-w-xs bg-[#070707] p-6 shadow-2xl overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <span className="text-pinkbrand font-bold text-xl">AVG CONNECTS</span>
+        <div className="absolute right-0 top-0 bottom-0 w-4/5 max-w-sm bg-[#050505] p-6 overflow-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/" className="font-bold text-lg">AVG CONNECTS</Link>
             <button onClick={() => setMobileOpen(false)} className="p-2">
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-                <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <X className="w-6 h-6" />
             </button>
           </div>
 
-          <nav className="flex flex-col gap-4">
-            {menuItems.map((item, idx) => (
-              <div key={idx}>
-                {item.subItems ? (
-                  <>
-                    <button
-                      onClick={() => setMobileMegaOpen(!mobileMegaOpen)}
-                      className="w-full flex justify-between items-center py-2 px-2 font-medium border-b border-[#ffffff06]"
-                    >
-                      {item.title}
-                      <svg className={`w-5 h-5 transform transition-transform ${mobileMegaOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
-                      </svg>
-                    </button>
-                    <div className={`${mobileMegaOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden transition-all`}>
-                      {item.subItems.map((sub, i) => (
-                        <Link key={i} href={sub.href} className="block py-2 px-4 hover:bg-[#111] rounded">{sub.title}</Link>
+          <div className="flex flex-col gap-4">
+            {MENU.map((m) => (
+              <div key={m.title}>
+                {m.sub ? (
+                  <details className="group">
+                    <summary className="cursor-pointer py-2 font-medium flex justify-between items-center">{m.title}<ChevronDown className="w-4 h-4" /></summary>
+                    <div className="mt-2 pl-2 flex flex-col gap-2">
+                      {m.sub.map((s) => (
+                        <Link key={s.title} href={s.href} className="block py-2 px-2 rounded hover:bg-[#111]">{s.title}</Link>
                       ))}
                     </div>
-                  </>
+                  </details>
                 ) : (
-                  <Link href={item.href} className="block py-2 px-2 border-b border-[#ffffff06]">{item.title}</Link>
+                  <Link href={m.href || '#'} className="block py-2 px-2 rounded hover:bg-[#111]">{m.title}</Link>
                 )}
               </div>
             ))}
-            <Link href="/suscribete" className="btn-pink w-full mt-4 text-center block">¡Comenzar!</Link>
-          </nav>
+
+            <Link href="/suscribete" className="mt-4 bg-red-600 text-white py-2 rounded text-center font-semibold">Suscribite</Link>
+
+            <div className="mt-6 border-t border-[#111] pt-4">
+              <Link href="/mi-cuenta" className="block py-2">Mi cuenta</Link>
+              <Link href="/carrito" className="block py-2">Carrito ({cartCount})</Link>
+            </div>
+          </div>
+
+          <div className="mt-6 text-xs text-gray-400">Soporte · Términos · Política de privacidad</div>
         </div>
       </div>
     </header>
