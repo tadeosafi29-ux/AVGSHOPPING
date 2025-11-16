@@ -2,6 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Rajdhani', sans-serif;
+/* Reset básico */
+html, body {
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+input, textarea {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+/* header extras */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fadeInUp 0.28s ease forwards;
+}
+
+/* ensure container width used in header */
+.max-w-7xl { max-width: 1280px; }
+
+/* small utility for focus */
+.button-focus:focus { outline: 3px solid rgba(255,20,83,0.14); outline-offset: 2px; }
+
+/* nice input placeholder */
+input::placeholder { color: rgba(255,255,255,0.3); }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* header animations & layout helpers */
+.max-w-7xl { max-width: 1280px; }
+.max-w-screen-xl { max-width: 1200px; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeInUp 0.28s ease forwards; }
+
+/* subtle card hover */
+.group:hover .group-hover\:scale-105 { transform: scale(1.05); }
+
+/* improved input placeholder */
+input::placeholder { color: rgba(255,255,255,0.35); }
+
+/* ensure header doesn't cover content */
+:root {
+  --header-height: 64px;
+}
+main { padding-top: var(--header-height); }
+
+/* responsive tweaks */
+@media (min-width: 1024px) {
+  :root { --header-height: 64px; } /* lg */
+}
+@media (max-width: 1023px) {
+  :root { --header-height: 64px; } /* md/sm */
 }
